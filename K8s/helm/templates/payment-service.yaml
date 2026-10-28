@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: payment
   labels:
+    metrics: robot-shop
     service: payment
 spec:
   ports:

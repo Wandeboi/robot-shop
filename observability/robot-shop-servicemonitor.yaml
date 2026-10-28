@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: robot-shop
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames: [robot-shop]
+  selector:
+    matchLabels:
+      metrics: robot-shop
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
