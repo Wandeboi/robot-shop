@@ -1,8 +1,6 @@
-# Sample Microservice Application
+Capstone 2: Keep It Running — Observability and Reliability
 
-Stan's Robot Shop is a sample microservice application you can use as a sandbox to test and learn containerised application orchestration and monitoring techniques. It is not intended to be a comprehensive reference example of how to write a microservices application, although you will better understand some of those concepts by playing with Stan's Robot Shop. To be clear, the error handling is patchy and there is not any security built into the application.
-
-You can get more detailed information from my [blog post](https://www.instana.com/blog/stans-robot-shop-sample-microservice-application/) about this sample microservice application.
+This project extends the original Robot Shop application with monitoring, centralized logging, distributed tracing, SLO-based alerting, and incident response capabilities.
 
 This sample microservice application has been built using these technologies:
 - NodeJS ([Express](http://expressjs.com/))
@@ -17,14 +15,39 @@ This sample microservice application has been built using these technologies:
 - Nginx
 - AngularJS (1.x)
 
-The various services in the sample application already include all required Instana components installed and configured. The Instana components provide automatic instrumentation for complete end to end [tracing](https://docs.instana.io/core_concepts/tracing/), as well as complete visibility into time series metrics for all the technologies.
+The following components and practices have been added:
 
-To see the application performance results in the Instana dashboard, you will first need an Instana account. Don't worry a [trial account](https://instana.com/trial?utm_source=github&utm_medium=robot_shop) is free.
+Prometheus and Grafana: Metrics collection, monitoring, and visualization.
 
-## Build from Source
-To optionally build from source (you will need a newish version of Docker to do this) use Docker Compose. Optionally edit the `.env` file to specify an alternative image registry and version tag; see the official [documentation](https://docs.docker.com/compose/env-file/) for more information.
+Fluent Bit and Loki: Log collection and centralized log analysis.
 
-To download the tracing module for Nginx, it needs a valid Instana agent key. Set this in the environment before starting the build.
+OpenTelemetry Collector and Jaeger: Distributed trace collection and analysis.
+
+Service Level Objective (SLO): A target availability of 99%, documented in SLO.md.
+
+Alerting: SLO-based alert rules and Alertmanager configuration for Slack notifications.
+
+Incident response: Troubleshooting and recovery procedures documented in RUNBOOK.md.
+
+Observability Configuration
+
+The observability stack is deployed and managed from the observability/ directory.
+
+Component		            	Configuration file
+
+Alertmanager		        	observability/alertmanager-values.yaml
+
+SLO alerts		            	observability/slo-alerts.yaml
+
+Fluent Bit		            	observability/fluent-bit.yaml
+
+Loki		            		observability/loki-values.yaml
+
+OpenTelemetry Collector	    	observability/otel-collector.yaml
+
+Jaeger			            	observability/jaeger.yaml
+
+These additions support service health monitoring, incident detection, troubleshooting, and reliability improvement for the Robot Shop application.
 
 ```shell
 $ export INSTANA_AGENT_KEY="<your agent key>"
@@ -63,16 +86,6 @@ If you want to fire up some load as well:
 $ docker-compose -f docker-compose.yaml -f docker-compose-load.yaml up
 ```
 
-If you are running it locally on a Linux host you can also run the Instana [agent](https://docs.instana.io/quick_start/agent_setup/container/docker/) locally, unfortunately the agent is currently not supported on Mac.
-
-There is also only limited support on ARM architectures at the moment.
-
-## Marathon / DCOS
-
-The manifests for robotshop are in the *DCOS/* directory. These manifests were built using a fresh install of DCOS 1.11.0. They should work on a vanilla HA or single instance install.
-
-You may install Instana via the DCOS package manager, instructions are here: https://github.com/dcos/examples/tree/master/instana-agent/1.9
-
 ## Kubernetes
 You can run Kubernetes locally using [minikube](https://github.com/kubernetes/minikube) or on one of the many cloud providers.
 
@@ -93,9 +106,7 @@ $ kubectl get svc web
 ```
 
 If you are using a cloud Kubernetes / Openshift / Mesosphere then it will be available on the load balancer of that system.
-
-## Load Generation
-A separate load generation utility is provided in the `load-gen` directory. This is not automatically run when the application is started. The load generator is built with Python and [Locust](https://locust.io). The `build.sh` script builds the Docker image, optionally taking *push* as the first argument to also push the image to the registry. The registry and tag settings are loaded from the `.env` file in the parent directory. The script `load-gen.sh` runs the image, it takes a number of command line arguments. You could run the container inside an orchestration system (K8s) as well if you want to, an example descriptor is provided in K8s directory. For End-user Monitoring ,load is not automatically generated but by navigating through the Robotshop from the browser .For more details see the [README](load-gen/README.md) in the load-gen directory.  
+ 
 
 ## Website Monitoring / End-User Monitoring
 
