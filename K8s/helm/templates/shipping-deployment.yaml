@@ -17,28 +17,56 @@ spec:
       {{ if .Values.psp.enabled }}
       serviceAccountName: robot-shop
       {{ end }}
+      initContainers:
+      - name: otel-java-init
+        image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:latest
+        command: ["cp", "/javaagent.jar", "/otel-auto-instrumentation-java/javaagent.jar"]
+        volumeMounts:
+        - name: otel-auto
+          mountPath: /otel-auto-instrumentation-java
       containers:
       - name: shipping
         image: {{ .Values.image.repo }}/rs-shipping:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 8080
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: " -javaagent:/otel-auto-instrumentation-java/javaagent.jar -XX:MaxRAMPercentage=65.0"
+        - name: OTEL_SERVICE_NAME
+          value: shipping
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.monitoring.svc.cluster.local:4318
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: none
+        - name: OTEL_LOGS_EXPORTER
+          value: none
+        volumeMounts:
+        - name: otel-auto
+          mountPath: /otel-auto-instrumentation-java
         # it's Java it needs lots of memory
         resources:
           limits:
-            cpu: 200m
-            memory: 1000Mi
+            cpu: 1000m
+            memory: 2Gi
           requests:
-            cpu: 100m
-            memory: 500Mi
+            cpu: 200m
+            memory: 768Mi
         readinessProbe:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 5
+          initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 30
           successThreshold: 1
+      volumes:
+      - name: otel-auto
+        emptyDir: {}
       restartPolicy: Always
       {{- with .Values.shipping.affinity }}
       affinity:
